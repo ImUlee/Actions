@@ -12,11 +12,9 @@ struct MatrixPilotApp: App {
 }
 
 struct ContentView: View {
-    @State private var isLoading = true
-    
     var body: some View {
         ZStack {
-            // iOS 26 液态背景效果
+            // 兼容的液态背景效果 (iOS 15+)
             LiquidBackground()
             
             WebViewRepresentable(url: URL(string: "https://log.ppia.me:7777")!)
@@ -26,36 +24,50 @@ struct ContentView: View {
     }
 }
 
-// iOS 26 液态背景效果
+// 兼容的液态背景效果
 struct LiquidBackground: View {
     @State private var animate = false
     
     var body: some View {
-        MeshGradient(
-            width: 3,
-            height: 3,
-            points: [
-                .init(0, 0): animate ? .blue : .purple,
-                .init(0.5, 0): animate ? .cyan : .blue,
-                .init(1, 0): animate ? .blue : .purple,
-                .init(0, 0.5): animate ? .indigo : .pink,
-                .init(0.5, 0.5): animate ? .white.opacity(0.3) : .white.opacity(0.2),
-                .init(1, 0.5): animate ? .indigo : .pink,
-                .init(0, 1): animate ? .purple : .blue,
-                .init(0.5, 1): animate ? .blue : .cyan,
-                .init(1, 1): animate ? .purple : .blue,
-            ],
-            colors: [
-                .blue, .cyan, .blue,
-                .indigo, .white, .indigo,
-                .purple, .blue, .purple
-            ]
-        )
-        .ignoresSafeArea()
-        .onAppear {
-            withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
-                animate = true
+        ZStack {
+            // 渐变背景
+            LinearGradient(
+                colors: [
+                    animate ? Color.blue.opacity(0.8) : Color.purple.opacity(0.8),
+                    animate ? Color.cyan.opacity(0.6) : Color.blue.opacity(0.6),
+                    animate ? Color.indigo.opacity(0.8) : Color.pink.opacity(0.8)
+                ],
+                startPoint: animate ? .topLeading : .bottomLeading,
+                endPoint: animate ? .bottomTrailing : .topTrailing
+            )
+            .ignoresSafeArea()
+            
+            // 浮动圆形模拟液态
+            ForEach(0..<5, id: \.self) { index in
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.white.opacity(0.3), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 100
+                        )
+                    )
+                    .frame(width: CGFloat(100 + index * 50), height: CGFloat(100 + index * 50))
+                    .position(
+                        x: animate ? CGFloat(200 + index * 80) : CGFloat(100 + index * 60),
+                        y: animate ? CGFloat(300 + index * 40) : CGFloat(200 + index * 80)
+                    )
+                    .animation(
+                        Animation.easeInOut(duration: Double(3 + index))
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(index) * 0.5),
+                        value: animate
+                    )
             }
+        }
+        .onAppear {
+            animate = true
         }
     }
 }
@@ -67,12 +79,10 @@ struct WebViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
-        config.preferences.javaScriptEnabled = true
         
-        // iOS 26 新特性支持
-        if #available(iOS 26.0, *) {
-            config.liquidPreferences.enabled = true
-            config.liquidPreferences.contentSize = .full
+        // 启用 JavaScript
+        if #available(iOS 16.0, *) {
+            config.defaultWebpagePreferences.allowsContentJavaScript = true
         }
         
         let webView = WKWebView(frame: .zero, configuration: config)
