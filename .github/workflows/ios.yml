@@ -25,13 +25,13 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build
-          
-          # 查找构建产物
-          find . -name "*.app" -type d
+            build          
       
       - name: Upload
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "MatrixPilot.app" -type d | head -1)
+          cp -r "$APP_PATH" ./MatrixPilot.app          
         uses: actions/upload-artifact@v4
         with:
           name: MatrixPilot
-          path: ios/build/Debug-iphonesimulator/MatrixPilot.app
+          path: ./MatrixPilot.app
