@@ -2,7 +2,7 @@ name: MatrixPilot
 options:
   bundleIdPrefix: com.matrixpilot
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "15.0"
   xcodeVersion: "15.0"
 
 settings:

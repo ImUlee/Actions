@@ -14,12 +14,8 @@ struct MatrixPilotApp: App {
 struct ContentView: View {
     var body: some View {
         ZStack {
-            // iOS 26 液态背景效果
-            if #available(iOS 26.0, *) {
-                iOS26LiquidBackground()
-            } else {
-                FallbackLiquidBackground()
-            }
+            // 液态背景效果 (iOS 15+)
+            LiquidBackground()
             
             WebViewRepresentable(url: URL(string: "https://log.ppia.me:7777")!)
                 .ignoresSafeArea()
@@ -27,64 +23,53 @@ struct ContentView: View {
     }
 }
 
-// iOS 26 液态背景 - 使用正确的 MeshGradient API
-@available(iOS 26.0, *)
-struct iOS26LiquidBackground: View {
-    @State private var animate = false
-    
-    var body: some View {
-        MeshGradient(
-            width: 3,
-            height: 3,
-            points: [
-                .init(0, 0): .blue,
-                .init(0.5, 0): .cyan,
-                .init(1, 0): .blue,
-                .init(0, 0.5): .indigo,
-                .init(0.5, 0.5): .white.opacity(0.3),
-                .init(1, 0.5): .indigo,
-                .init(0, 1): .purple,
-                .init(0.5, 1): .blue,
-                .init(1, 1): .purple,
-            ],
-            colors: [
-                .blue, .cyan, .blue,
-                .indigo, .white, .indigo,
-                .purple, .blue, .purple
-            ]
-        )
-        .ignoresSafeArea()
-        .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: animate)
-        .onAppear { animate = true }
-    }
-}
-
-// 备用液态背景
-struct FallbackLiquidBackground: View {
+// 液态背景效果
+struct LiquidBackground: View {
     @State private var animate = false
     
     var body: some View {
         ZStack {
+            // 渐变背景
             LinearGradient(
-                colors: [.blue.opacity(0.8), .purple.opacity(0.8), .pink.opacity(0.6)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                colors: [
+                    animate ? Color.blue.opacity(0.9) : Color.purple.opacity(0.9),
+                    animate ? Color.cyan.opacity(0.7) : Color.blue.opacity(0.7),
+                    animate ? Color.indigo.opacity(0.8) : Color.pink.opacity(0.8),
+                    animate ? Color.purple.opacity(0.8) : Color.blue.opacity(0.8)
+                ],
+                startPoint: animate ? .topLeading : .bottomLeading,
+                endPoint: animate ? .bottomTrailing : .topTrailing
             )
             .ignoresSafeArea()
             
-            ForEach(0..<5, id: \.self) { index in
+            // 浮动圆形模拟液态
+            ForEach(0..<6, id: \.self) { index in
                 Circle()
-                    .fill(.white.opacity(0.2))
-                    .frame(width: 150 + CGFloat(index * 30), height: 150 + CGFloat(index * 30))
-                    .position(
-                        x: CGFloat(150 + index * 60) + (animate ? CGFloat.random(in: -30...30) : 0),
-                        y: CGFloat(200 + index * 50) + (animate ? CGFloat.random(in: -30...30) : 0)
+                    .fill(
+                        RadialGradient(
+                            colors: [.white.opacity(0.4), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 80
+                        )
                     )
-                    .blur(radius: 30)
+                    .frame(width: CGFloat(120 + index * 40), height: CGFloat(120 + index * 40))
+                    .blur(radius: 20)
+                    .position(
+                        x: animate ? CGFloat(180 + index * 50) : CGFloat(100 + index * 70),
+                        y: animate ? CGFloat(350 + index * 30) : CGFloat(250 + index * 60)
+                    )
+                    .animation(
+                        Animation.easeInOut(duration: Double(4 + index))
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(index) * 0.3),
+                        value: animate
+                    )
             }
         }
-        .onAppear { animate = true }
-        .animation(.easeInOut(duration: 4).repeatForever(autoreverses: true), value: animate)
+        .onAppear {
+            animate = true
+        }
     }
 }
 
