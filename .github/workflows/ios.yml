@@ -8,14 +8,12 @@ on:
 jobs:
   build:
     runs-on: macos-15
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Build iOS App
+      - name: Build
         run: |
           cd ios
           which xcodegen || brew install xcodegen
@@ -23,13 +21,16 @@ jobs:
           xcodebuild -project MatrixPilot.xcodeproj \
             -scheme MatrixPilot \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build
+          
+          # 查找构建产物
+          find . -name "*.app" -type d
       
-      - name: Upload Artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: MatrixPilot
