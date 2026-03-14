@@ -14,61 +14,77 @@ struct MatrixPilotApp: App {
 struct ContentView: View {
     var body: some View {
         ZStack {
-            // 兼容的液态背景效果 (iOS 15+)
-            LiquidBackground()
+            // iOS 26 液态背景效果
+            if #available(iOS 26.0, *) {
+                iOS26LiquidBackground()
+            } else {
+                FallbackLiquidBackground()
+            }
             
             WebViewRepresentable(url: URL(string: "https://log.ppia.me:7777")!)
                 .ignoresSafeArea()
         }
-        .statusBarHidden(false)
     }
 }
 
-// 兼容的液态背景效果
-struct LiquidBackground: View {
+// iOS 26 液态背景 - 使用正确的 MeshGradient API
+@available(iOS 26.0, *)
+struct iOS26LiquidBackground: View {
+    @State private var animate = false
+    
+    var body: some View {
+        MeshGradient(
+            width: 3,
+            height: 3,
+            points: [
+                .init(0, 0): .blue,
+                .init(0.5, 0): .cyan,
+                .init(1, 0): .blue,
+                .init(0, 0.5): .indigo,
+                .init(0.5, 0.5): .white.opacity(0.3),
+                .init(1, 0.5): .indigo,
+                .init(0, 1): .purple,
+                .init(0.5, 1): .blue,
+                .init(1, 1): .purple,
+            ],
+            colors: [
+                .blue, .cyan, .blue,
+                .indigo, .white, .indigo,
+                .purple, .blue, .purple
+            ]
+        )
+        .ignoresSafeArea()
+        .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: animate)
+        .onAppear { animate = true }
+    }
+}
+
+// 备用液态背景
+struct FallbackLiquidBackground: View {
     @State private var animate = false
     
     var body: some View {
         ZStack {
-            // 渐变背景
             LinearGradient(
-                colors: [
-                    animate ? Color.blue.opacity(0.8) : Color.purple.opacity(0.8),
-                    animate ? Color.cyan.opacity(0.6) : Color.blue.opacity(0.6),
-                    animate ? Color.indigo.opacity(0.8) : Color.pink.opacity(0.8)
-                ],
-                startPoint: animate ? .topLeading : .bottomLeading,
-                endPoint: animate ? .bottomTrailing : .topTrailing
+                colors: [.blue.opacity(0.8), .purple.opacity(0.8), .pink.opacity(0.6)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
             
-            // 浮动圆形模拟液态
             ForEach(0..<5, id: \.self) { index in
                 Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [.white.opacity(0.3), .clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 100
-                        )
-                    )
-                    .frame(width: CGFloat(100 + index * 50), height: CGFloat(100 + index * 50))
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 150 + CGFloat(index * 30), height: 150 + CGFloat(index * 30))
                     .position(
-                        x: animate ? CGFloat(200 + index * 80) : CGFloat(100 + index * 60),
-                        y: animate ? CGFloat(300 + index * 40) : CGFloat(200 + index * 80)
+                        x: CGFloat(150 + index * 60) + (animate ? CGFloat.random(in: -30...30) : 0),
+                        y: CGFloat(200 + index * 50) + (animate ? CGFloat.random(in: -30...30) : 0)
                     )
-                    .animation(
-                        Animation.easeInOut(duration: Double(3 + index))
-                            .repeatForever(autoreverses: true)
-                            .delay(Double(index) * 0.5),
-                        value: animate
-                    )
+                    .blur(radius: 30)
             }
         }
-        .onAppear {
-            animate = true
-        }
+        .onAppear { animate = true }
+        .animation(.easeInOut(duration: 4).repeatForever(autoreverses: true), value: animate)
     }
 }
 
@@ -80,7 +96,6 @@ struct WebViewRepresentable: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         
-        // 启用 JavaScript
         if #available(iOS 16.0, *) {
             config.defaultWebpagePreferences.allowsContentJavaScript = true
         }
@@ -93,7 +108,6 @@ struct WebViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        webView.load(request)
+        webView.load(URLRequest(url: url))
     }
 }

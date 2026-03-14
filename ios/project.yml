@@ -2,7 +2,7 @@ name: MatrixPilot
 options:
   bundleIdPrefix: com.matrixpilot
   deploymentTarget:
-    iOS: "15.0"
+    iOS: "26.0"
   xcodeVersion: "15.0"
 
 settings:
@@ -29,5 +29,3 @@ targets:
           - "README.md"
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.matrixpilot.app
-      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
