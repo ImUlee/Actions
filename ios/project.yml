@@ -1,0 +1,32 @@
+name: MatrixPilot
+options:
+  bundleIdPrefix: com.matrixpilot
+  deploymentTarget:
+    iOS: "26.0"
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    INFOPLIST_FILE: Info.plist
+    GENERATE_INFOPLIST_FILE: NO
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: NO
+
+targets:
+  MatrixPilot:
+    type: application
+    platform: iOS
+    sources:
+      - path: .
+        excludes:
+          - "*.yml"
+          - "*.sh"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.matrixpilot.app
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
