@@ -9,30 +9,20 @@ jobs:
   build:
     runs-on: macos-15
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Show Xcode version
-        run: xcodebuild -version
+        with:
+          node-version: "24"
       
       - name: Build iOS App
         run: |
           cd ios
-          ls -la
-          
-          # Install xcodegen if needed
           which xcodegen || brew install xcodegen
-          
-          # Generate project
           xcodegen generate
-          
-          # Show generated files
-          ls -la
-          
-          # Build
           xcodebuild -project MatrixPilot.xcodeproj \
             -scheme MatrixPilot \
             -configuration Debug \
@@ -42,13 +32,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
       
-      - name: List build output
-        run: find . -name "*.app" -type d 2>/dev/null || echo "No app found"
-      
       - name: Upload Artifact
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: MatrixPilot
-          path: ios/build/Debug-iphoneos/MatrixPilot.app
-          retention-days: 7
+          path: ios/build/Debug-iphonesimulator/MatrixPilot.app
